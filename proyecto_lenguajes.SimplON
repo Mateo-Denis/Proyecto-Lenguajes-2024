@@ -10,20 +10,18 @@
 
 %%% Carga la VT de la clase B
         SetLabel VTB, Libre                                     %Creo la etiqueta para la VT de B 
-        SetD Libre, m1B         @VTA: direccion de m1A          %Pongo en la VTA la direccion la version de m1 que usa A 
-        SetD Libre+1, m1B       @VTA: direccion de m2A           %Pongo en la VTA la direccion la version de m2 que usa A 
-        SetD Libre+2, m2A
+        SetD Libre, m1B         @VTB: direccion de m1B          %Pongo en la VTA la direccion la version de m1 que usa A 
+        SetD Libre+1, m2A       @VTB: direccion de m2A
+        SetD Libre+2, m1B1p     @VTB: direccion de m1B1p        %Pongo en la VTA la direccion la version de m2 que usa A 
         SetLibre Libre+3                                        %Actualizo Libre segun el tamaño de la VTA    (preguntar)
         SetActual Libre                                         %Actualizo actual tambien
 
 %%% Carga la VT de la clase C
         SetLabel VTC, Libre                                     %Creo la etiqueta para la VT de B 
-        SetD Libre, m1A        @VTA: direccion de m1A           %Pongo en la VTA la direccion la version de m1 que usa A 
+        SetD Libre, m1C        @VTA: direccion de m1C           %Pongo en la VTA la direccion la version de m1 que usa A 
         SetD Libre+1, m2A      @VTA: direccion de m2A           %Pongo en la VTA la direccion la version de m2 que usa A 
-        SetD Libre+2, m1C
-        SetD Libre+3, m3C
-        SetD Libre+4, VTA
-        SetLibre Libre+5                                        %Actualizo Libre segun el tamaño de la VTA    (preguntar)
+        SetD Libre+2, m3C      @VTA: direccion de m3C
+        SetLibre Libre+4                                        %Actualizo Libre segun el tamaño de la VTA    (preguntar)
         SetActual Libre                                         %Actualizo actual tambien
 
 %%% Carga la VT de la clase Base
@@ -49,6 +47,8 @@
         Jump main                           %Salto al codigo de main
         Halt                                %Cuando termino de ejecutar main finalizo
 
+%%%------------------Traduccion del constructor de la clase A---------------------
+
 constA  SetH D[Actual+2]+1, 1
         SetH D[Actual+2]+2, 2
         SetH D[Actual+2]+3, 10
@@ -56,48 +56,132 @@ constA  SetH D[Actual+2]+1, 1
         SetActual D[Libre+1]
         Jump D[Libre]
 
+%%%---------------Fin de la traduccion del constructor de la clase A---------------
+
+%%%---------------------Traduccion de m1 de la clase A----------------------------
+
 m1A     SetH D[Actual+2]+1, H[D[Actual+2]+1] + 1
         SetH D[Actual+2]+2, H[D[Actual+2]+2] + H[D[Actual+2]+1]
-        JumpT m1A, (H[D[Actual+2]+1] + H[D[Actual+2]+2]) <= (D[CRA] * D[CRA])
+        JumpT m1A, (H[D[Actual+2]+1] + H[D[Actual+2]+2]) <= (D[CRA] * D[CRA])   %while loop usando la etiqueta del metodo
+        
+        SetLibre Libre + 1              @Lugar de retorno
+        SetD Libre, PC+6                @PTR
+        SetD Libre+1, Actual            @ED
+        SetD Libre+2, D[Actual+2]       @this
+        SetActual Libre
+        SetLibre Actual+3
+        Jump m2A                % en nuestro caso, siempre hace Jump m2A porque nadie redefine m2
+                                % y no hace falta hacer Jump  D[H[D[Actual+2]]]+1 
+
+        SetD Actual-1, D[Libre-1]
+        SetLibre Libre - 1
+
         SetLibre Actual
         SetActual D[Libre+1] 
         Jump D[Libre]
-        
+
+%%%-----------------Fin de la traduccion de m1 de la clase A---------------------
+
+
+%%%---------------------Traduccion de m2 de la clase A--------------------------
+
 m2A     SetD Actual-1, (H[D[Actual+2]+3]) - (H[D[Actual+2]+1]) + (3*D[CRA])
         SetLibre Actual
         SetActual D[Libre+1] 
         Jump D[Libre]
 
-constB  SetD Libre, PC+11               @PTR
+%%%-----------------Fin de la traduccion de m2 de la clase A---------------------
+
+%%%------------------Traduccion del constructor de la clase B---------------------
+
+constB  SetD Libre, PC+6                @PTR
         SetD Libre+1, Actual            @ED
         SetD Libre+2, D[Actual+2]       @this
         SetActual Libre
         SetLibre Actual+3
         Jump constA
+
         SetH D[Actual+2]+4, D[CRA]+1
         SetH D[Actual+2]+5, (H[D[Actual+2]+1] + H[D[Actual+2]+2]) * 3
         SetLibre Actual
         SetActual D[Libre+1]
         Jump D[Libre]
 
-m1B     
+%%%---------------Fin de la traduccion del constructor de la clase B---------------
 
+%%%---------------------Traduccion de m1 de la clase B----------------------------
 
-m1B1p   SetD Actual+4, 5        @var local t=5
-        JumpT !( D[Actual+3] >= ( D[Actual+3] + 1 ) ), if2 
-        JumpT ( D[Actual+3] < 10 ), ret1
+m1B     SetD Actual+4, H[D[Actual+2]+1] - ( H[D[Actual+2]+2] * H[D[Actual+2]+3] )
+        JumpT D[Actual+4] == 1, case1
+        JumpT D[Actual+4] == 2, case2
+        SetD Actual+3, D[Actual+4]                      @default
+        Jump endsw
+case1   SetD Actual+3, ( 3 * D[Actual+4] ) + 1          @case 1
+        Jump endsw
+case2   SetD Actual+3, D[Actual+4] + H[D[Actual+2]+3]   @case 2
 
-if2     JumpT ( D[Actual+3] >= ( D[Actual+3] + 1 ) ) & ( D[Actual+3] < 10 ), ret2
+endsw   SetLibre Libre+1                                @Lugar de retorno
+        SetD Libre, PC+6                                @PTR
+        SetD Libre+1, Actual                            @ED
+        SetD Libre+2,D[Actual+2]                        @This
+        SetActual Libre 
+        SetLibre Actual+3
+        Jump m1A
+        
+        SetD Actual-1, D[Libre-1] + ( D[Actual+4] * D[Actual+3] )
+        SetLibre Libre-1
 
-ret3    SetD Actual-1, ( D[Actual+4] * 5 )        
+        SetLibre Actual
+        SetActual D[Libre+1]
+        Jump D[Libre]
+
+%%%-----------------Fin de la traduccion de m1 de la clase B---------------------
+
+%%%---------------------Traduccion de m1(x) de la clase B----------------------------
+
+m1B1p   SetD Actual+4, 5                                                                @var local t=5
+        JumpT !( D[Actual+3] >= ( D[Actual+3] + 1 ) ), if2                              @Primer if, primera condicion 
+        JumpT ( D[Actual+3] < 10 ), ret1                                                @Primer if, segunda condicion
+
+if2     JumpT ( D[Actual+3] >= ( D[Actual+3] + 1 ) ) & ( D[Actual+3] < 10 ), ret2       @Segundo if
+
+ret3    SetD Actual-1, ( D[Actual+4] * 5 )                                              @return t * 5
         Jump m1B1pC
 
-ret1    SetD Actual-1, ( D[Actual+3] - D[Actual+4] - 1 )
+ret1    SetD Actual-1, ( D[Actual+4] - D[Actual+3] - 1 )                                @retrun t - x
         Jump m1B1pC
 
-ret2    SetD Actual-1, ( D[Actual+3] - D[Actual+4] )
+ret2    SetD Actual-1, ( D[Actual+4] - D[Actual+3] )                                    @return t - x - 1
 m1B1pC  SetLibre Actual
         SetActual D[Libre+1]
         Jump D[Libre]
+
+
+%%%-----------------Fin de la traduccion de m1(x) de la clase B---------------------
+
+%%%------------------Traduccion del constructor de la clase C---------------------
+
+constC  SetD Libre, PC+6                @PTR
+        SetD Libre+1, Actual            @ED
+        SetD Libre+2, D[Actual+2]       @this
+        SetActual Libre
+        SetLibre Actual+4
+        Jump constA
+
+        SetD Actual+5, PO               @o1 = new B()
+        SetH PO, VTC
+        SetPO PO+6
+
+        SetLibre Libre+2                %reservo lugar para 2 returns
+        SetD Libre, PC+6                @PTR
+        SetD Libre+1, Actual            @ED
+        SetD Libre+2, D[Actual+2]       @this
+        SetD Libre-1, Actual+3          @param x
+        SetActual Libre
+        SetLibre Actual+4
+        Jump m1b
+
+%%%---------------Fin de la traduccion del constructor de la clase B---------------
+
 
 %%%-----------------------------------------------------------------------------  
