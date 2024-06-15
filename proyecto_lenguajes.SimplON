@@ -168,18 +168,34 @@ constC  SetD Libre, PC+6                @PTR
         SetLibre Actual+4
         Jump constA
 
-        SetD Actual+5, PO               @o1 = new B()
-        SetH PO, VTC
+        SetH D[Actual+2]+5, PO               @o1 = new B()
+        SetH PO, VTB 
         SetPO PO+6
 
         SetLibre Libre+2                %reservo lugar para 2 returns
-        SetD Libre, PC+6                @PTR
+        SetD Libre, PC+7                @PTR
         SetD Libre+1, Actual            @ED
         SetD Libre+2, D[Actual+2]       @this
         SetD Libre-1, Actual+3          @param x
         SetActual Libre
         SetLibre Actual+4
         Jump m1b
+
+        SetD Libre-2, D[Libre-1]
+        
+        SetD Libre, PC+7                        @PTR
+        SetD Libre+1, Actual                    @ED
+        SetD Libre+2, D[Actual+2]               @this
+        SetD Libre-1, ( 2 * D[Actual+3] )       @param 2*x
+        SetActual Libre
+        SetLibre Actual+4
+        Jump m1b
+
+        SetD Actual-1, D[Libre-2] + D[Libre-1]
+
+        SetLibre Actual
+        SetActual D[Libre+1]
+        Jump D[Libre]
 
 %%%---------------Fin de la traduccion del constructor de la clase B---------------
 
