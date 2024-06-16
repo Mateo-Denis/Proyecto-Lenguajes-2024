@@ -112,8 +112,8 @@ constB  SetD Libre, PC+6                @PTR
 %%%---------------------Traduccion de m1 de la clase B----------------------------
 
 m1B     SetD Actual+4, H[D[Actual+2]+1] - ( H[D[Actual+2]+2] * H[D[Actual+2]+3] )
-        JumpT D[Actual+4] == 1, case1
-        JumpT D[Actual+4] == 2, case2
+        JumpT case1, D[Actual+4] == 1
+        JumpT case2, D[Actual+4] == 2
         SetD Actual+3, D[Actual+4]                      @default
         Jump endsw
 case1   SetD Actual+3, ( 3 * D[Actual+4] ) + 1          @case 1
@@ -140,10 +140,10 @@ endsw   SetLibre Libre+1                                @Lugar de retorno
 %%%---------------------Traduccion de m1(x) de la clase B----------------------------
 
 m1B1p   SetD Actual+4, 5                                                                @var local t=5
-        JumpT !( D[Actual+3] >= ( D[Actual+3] + 1 ) ), if2                              @Primer if, primera condicion 
-        JumpT ( D[Actual+3] < 10 ), ret1                                                @Primer if, segunda condicion
+        JumpT if2, !( D[Actual+3] >= ( D[Actual+3] + 1 ) )                              @Primer if, primera condicion 
+        JumpT ret1, ( D[Actual+3] < 10 )                                                @Primer if, segunda condicion
 
-if2     JumpT ( D[Actual+3] >= ( D[Actual+3] + 1 ) ) & ( D[Actual+3] < 10 ), ret2       @Segundo if
+if2     JumpT ret2, ( D[Actual+3] >= ( D[Actual+3] + 1 ) ) & ( D[Actual+3] < 10 )       @Segundo if
 
 ret3    SetD Actual-1, ( D[Actual+4] * 5 )                                              @return t * 5
         Jump m1B1pC
@@ -158,46 +158,143 @@ m1B1pC  SetLibre Actual
 
 
 %%%-----------------Fin de la traduccion de m1(x) de la clase B---------------------
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%------------------Traduccion del constructor de la clase C---------------------
 
 constC  SetD Libre, PC+6                @PTR
         SetD Libre+1, Actual            @ED
         SetD Libre+2, D[Actual+2]       @this
         SetActual Libre
-        SetLibre Actual+4
+        SetLibre Actual+3
         Jump constA
 
-        SetH D[Actual+2]+5, PO               @o1 = new B()
+        SetH D[Actual+2]+5, PO          @o1 = new B()
         SetH PO, VTB 
         SetPO PO+6
+        SetD Libre, PC+6                @PTR
+        SetD Libre+1, Actual            @ED
+        SetD Libre+2, D[Actual+2]+5     @new this
+        SetActual Libre
+        SetLibre Actual+3
+        Jump constB
+
 
         SetLibre Libre+2                %reservo lugar para 2 returns
         SetD Libre, PC+7                @PTR
         SetD Libre+1, Actual            @ED
-        SetD Libre+2, D[Actual+2]       @this
-        SetD Libre-1, Actual+3          @param x
+        SetD Libre+2, D[Actual+2]+5     @this
+        SetD Libre+3, D[Actual+3]       @param x
         SetActual Libre
         SetLibre Actual+4
-        Jump m1b
+        Jump m1B1p
 
         SetD Libre-2, D[Libre-1]
         
         SetD Libre, PC+7                        @PTR
         SetD Libre+1, Actual                    @ED
-        SetD Libre+2, D[Actual+2]               @this
-        SetD Libre-1, ( 2 * D[Actual+3] )       @param 2*x
+        SetD Libre+2, D[Actual+2]+5             @this
+        SetD Libre+3, ( 2 * D[Actual+3] )       @param 2*x
         SetActual Libre
         SetLibre Actual+4
-        Jump m1b
+        Jump m1B1p
 
-        SetD Actual-1, D[Libre-2] + D[Libre-1]
+        SetH D[Actual+2]+4, D[Libre-2] + D[Libre-1]
 
         SetLibre Actual
         SetActual D[Libre+1]
         Jump D[Libre]
 
-%%%---------------Fin de la traduccion del constructor de la clase B---------------
+%%%----------------Fin de la traduccion del constructor de la clase C----------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%---------------------Traduccion de m1(x) de la clase C----------------------------
 
+m1C1p   SetD Actual+4, 0
+        SetD Actual+5, 0
+        SetD Actual+6, 0
 
+        Jump condm1C
+wBm1C   SetD Actual+4, D[Actual+4] + D[Actual+3]        @aux1 = aux1 + x
+        SetD Actual+5, D[Actual+5] + 5                  @aux2 = aux2 + 5
+        JumpT wEm1C, D[Actual+6] == 20                  @if j==20 then break
+        SetD Actual+6, D[Actual+6] + 1
+
+condm1C JumpT wBm1C, ( D[Actual+4] <= D[Actual+5] )
+wEm1C   SetD Actual-1, D[Actual+4]
+
+%%%-----------------Fin de la traduccion de m1(x) de la clase C----------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%----------------------Traduccion de m3 de la clase C------------------------------
+
+m3C     SetH D[Actual+2]+5, PO          @o1 = new B()
+        SetH PO, VTB 
+        SetPO PO+6
+        SetD Libre, PC+6                @PTR
+        SetD Libre+1, Actual            @ED
+        SetD Libre+2, D[Actual+2]+5     @new this
+        SetActual Libre
+        SetLibre Actual+3
+        Jump constB
+
+        SetLibre Actual
+        SetActual D[Libre+1]
+        Jump D[Libre]
+
+%%%-------------------Fin de la traduccion de m3 de la clase C-----------------------
+%%%--------------------Traduccion de main de la clase Principal----------------------
+main    SetIn Actual+2
+        SetIn Actual+3
+
+        SetD Actual+4, PO
+        SetH PO, VTC
+        SetPO PO+6
+
+        SetD Libre, PC+7                                @PTR
+        SetD Libre+1, Actual                            @ED
+        SetD Libre+2, D[Actual+4]                       @this
+        SetD Libre+3, ( D[Actual+2] + D[Actual+3] )     @param x1+x2
+        SetActual Libre
+        SetLibre Actual+4
+        Jump constC
+
+        SetLibre Libre+1
+        SetD Libre, PC+7                                @PTR
+        SetD Libre+1, Actual                            @ED
+        SetD Libre+2, D[Actual+4]                       @this
+        SetD Libre+3, ( D[Actual+2] + D[Actual+3] + 1 ) @param x1+x2
+        SetActual Libre
+        SetLibre Actual+4
+        Jump m1C1p
+
+        SetOut Libre-1
+        SetLibre Libre-1
+
+        SetD Libre, PC+6                                @PTR
+        SetD Libre+1, Actual                            @ED
+        SetD Libre+2, D[Actual+4]                       @this
+        SetActual Libre
+        SetLibre Actual+3
+        Jump m3C
+
+        SetLibre Libre+2
+        SetD Libre, PC+7                        @PTR
+        SetD Libre+1, Actual                    @ED
+        SetD Libre+2, D[Actual+4]               @this
+        SetD Libre+3, D[Actual+2]               @param x1
+        SetActual Libre
+        SetLibre Actual+4
+        Jump m1B1p
+
+        SetD Libre-2, D[Libre-1]
+
+        SetLibre Libre+2
+        SetD Libre, PC+7                        @PTR
+        SetD Libre+1, Actual                    @ED
+        SetD Libre+2, D[Actual+4]               @this
+        SetD Libre+3, D[Actual+2]               @param x1
+        SetActual Libre
+        SetLibre Actual+4
+        Jump m2A
+        
+        
+        SetOut () D[Libre-1] + D[Libre-1] )      
 %%%-----------------------------------------------------------------------------  
