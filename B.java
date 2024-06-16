@@ -6,6 +6,7 @@ public class B extends A {
         super();
         v4 = a1 + 1;
         v5 = (v1 + v2) * 3;
+        System.out.println("dos atributos de b: " +v4 +" y "+ v5);
     }
 
     public int m1(){
